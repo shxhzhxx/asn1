@@ -19,9 +19,7 @@ Add it in your root build.gradle at the end of repositories:
 
 **Step 2.** Add the dependency<br>
 
-```
 [![](https://jitpack.io/v/shxhzhxx/asn1.svg)](https://jitpack.io/#shxhzhxx/asn1)
-```
 
 ```
 	dependencies {
@@ -54,9 +52,5 @@ byte[] asn1 = ASN1Encoder.encode(student);
 Student decoded = ASN1Decoder.decode(asn1, Student.class);
 
 ```
-
-
-```
 [更多用法示例](https://github.com/shxhzhxx/asn1/blob/master/library/src/androidTest/java/com/shxhzhxx/asn1/ASN1UnitTest.java)
-```
 

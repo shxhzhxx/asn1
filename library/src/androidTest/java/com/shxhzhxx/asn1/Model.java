@@ -27,7 +27,7 @@ public class Model {
         final int prime = 31;
         int result = 1;
         result = prime * result + id;
-        result = prime * result + Arrays.hashCode(data);
+        result = prime * result + (data == null ? 0 : Arrays.hashCode(data));
         return result;
     }
 

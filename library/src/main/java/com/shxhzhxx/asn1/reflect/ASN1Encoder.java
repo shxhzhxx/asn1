@@ -47,7 +47,6 @@ public class ASN1Encoder {
         Collections.sort(fields, new Comparator<Field>() {
             @Override
             public int compare(Field o1, Field o2) {
-                //上一步已经将没有FieldOrder的filed过滤掉了，这里不需要判空
                 return o1.getAnnotation(ASN1Field.class).order() - o2.getAnnotation(ASN1Field.class).order();
             }
         });

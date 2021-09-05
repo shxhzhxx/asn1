@@ -27,10 +27,10 @@ public class MultiGenericModel<T1, T2, T3> {
         final int prime = 31;
         int result = 1;
         result = prime * result + cmd;
-        result = prime * result + list.hashCode();
-        result = prime * result + model.hashCode();
-        result = prime * result + nestList.hashCode();
-        result = prime * result + list2.hashCode();
+        result = prime * result + (list == null ? 0 : list.hashCode());
+        result = prime * result + (model == null ? 0 : model.hashCode());
+        result = prime * result + (nestList == null ? 0 : nestList.hashCode());
+        result = prime * result + (list2 == null ? 0 : list2.hashCode());
         return result;
     }
 

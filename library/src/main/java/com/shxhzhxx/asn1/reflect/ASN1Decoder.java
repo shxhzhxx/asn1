@@ -1,15 +1,11 @@
 package com.shxhzhxx.asn1.reflect;
 
-import android.util.Log;
-
 import com.shxhzhxx.asn1.ASN1InputStream;
 import com.shxhzhxx.asn1.Constants;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,13 +16,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import static com.shxhzhxx.asn1.Constants.LOG_TAG;
-
 public class ASN1Decoder {
-
     public static <T> T decode(ASN1InputStream in, Class<T> cls, LinkedList<Type> typeParameters) throws Exception {
-
-        log("decode  cls:" + cls + "   typeParameters:" + typeParameters);
 
         int tag = in.readTag();
         int len = in.readLength();
@@ -35,23 +26,19 @@ public class ASN1Decoder {
 
         switch (tag) {
             case Constants.TAG_INTEGER:
-                log("TAG_INTEGER");
                 if (cls == null || cls == Object.class || cls == Integer.class || cls == int.class) {
                     object = new BigInteger(in.readContent(len)).intValue();
                 }
                 break;
             case Constants.TAG_OCTET_STRING:
-                log("TAG_OCTET_STRING");
                 if (cls == null || cls == Object.class || cls == byte[].class) {
                     object = in.readContent(len);
                 }
                 break;
             case Constants.TAG_NULL:
-                log("TAG_NULL");
                 object = null;
                 break;
             case Constants.TAG_SET:
-                log("TAG_SET");
                 if (cls == null || cls == Object.class || cls == Set.class) {
                     Set<Object> set = new HashSet<>();
                     Class itemClass = retrieveClass(typeParameters);
@@ -71,7 +58,6 @@ public class ASN1Decoder {
                 }
                 break;
             case Constants.TAG_SEQUENCE:
-                log("TAG_SEQUENCE");
                 if (cls == null || cls == Object.class || cls == List.class) {
                     List<Object> list = new ArrayList<>();
                     Class itemClass = retrieveClass(typeParameters);
@@ -107,28 +93,18 @@ public class ASN1Decoder {
                     object = cls.newInstance();
 
                     for (Field field : fields) {
-                        log("field:" + field.getName());
+                        typeParameters.addFirst(field.getGenericType());
+                        Class fieldClass = retrieveClass(typeParameters);
 
-                        Class fieldType = field.getType();
-
-                        Type gType = field.getGenericType();
-                        if (gType instanceof ParameterizedType) {
-                            log("ParameterizedType");
-                            ParameterizedType pType = (ParameterizedType) gType;
-                            fieldType = (Class) pType.getRawType();
-
-                            Type[] actualTypeArguments = pType.getActualTypeArguments();
-
-                            log("actualTypeArguments:" + Arrays.toString(actualTypeArguments));
-
-                            typeParameters.addAll(0, Arrays.asList(actualTypeArguments));
-
-                        } else if (field.getType() != field.getGenericType()) {
-                            log("getType != getGenericType");
-                            fieldType = retrieveClass(typeParameters);
+                        LinkedList<Type> fieldTypeParameters = new LinkedList<>();
+                        int typeCnt = fieldClass.getTypeParameters().length;
+                        while (typeCnt > 0) {
+                            typeCnt--;
+                            Class fieldTypeItem = retrieveClass(typeParameters);
+                            typeCnt += fieldTypeItem.getTypeParameters().length;
+                            fieldTypeParameters.add(fieldTypeItem);
                         }
-
-                        field.set(object, decode(is, fieldType, typeParameters));
+                        field.set(object, decode(is, fieldClass, fieldTypeParameters));
                     }
                 }
                 break;
@@ -155,8 +131,4 @@ public class ASN1Decoder {
         return Object.class;
     }
 
-    private static void log(String log) {
-        if (true)
-            Log.d(LOG_TAG, log);
-    }
 }

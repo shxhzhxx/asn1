@@ -18,11 +18,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.shxhzhxx.asn1.Constants.LOG_TAG;
-
 @RunWith(AndroidJUnit4.class)
 public class ASN1UnitTest {
-    private static final int REPEAT = 10;
+    public static final String LOG_TAG = "ASN1";
+    private static final int REPEAT = 100;
     private static final SecureRandom random = new SecureRandom();
 
     @Test
@@ -89,35 +88,40 @@ public class ASN1UnitTest {
         for (int i = 0; i < REPEAT; i++) {
             GenericModel<GenericModel<Model>> ggModelIn = new GenericModel<>();
             ggModelIn.val = (int) (Math.random() * Integer.MAX_VALUE);
-            ggModelIn.model = new GenericModel<>();
-            ggModelIn.model.model = randomModel();
-            ggModelIn.model.val = (int) (Math.random() * Integer.MAX_VALUE);
+            if (Math.random() > 0.5) {
+                ggModelIn.model = new GenericModel<>();
+                ggModelIn.model.model = randomModel();
+                ggModelIn.model.val = (int) (Math.random() * Integer.MAX_VALUE);
+            }
 
             GenericModel<GenericModel<Model>> ggModelOut = ASN1Decoder.decode(ASN1Encoder.encode(ggModelIn), GenericModel.class, GenericModel.class, Model.class);
             Assert.assertEquals(ggModelIn, ggModelOut);
         }
 
 
-        MultiGenericModel<Model, ModelB, Integer> mModelIn = new MultiGenericModel<>();
-        mModelIn.cmd = (int) (Math.random() * Integer.MAX_VALUE);
-        mModelIn.list = randomModelList(100);
-        mModelIn.model = randomModel();
-        mModelIn.nestList = new ArrayList<>();
-        n = (int) (Math.random() * 100);
-        for (int i = 0; i < n; i++) {
-            GenericModel<ModelB> genericModel = new GenericModel<>();
-            genericModel.val = (int) (Math.random() * Integer.MAX_VALUE);
-            genericModel.model = new ModelB((int) (Math.random() * Integer.MAX_VALUE), (int) (Math.random() * Integer.MAX_VALUE), random.generateSeed((int) (Math.random() * 1024)));
-            mModelIn.nestList.add(genericModel);
-        }
-        mModelIn.list2 = new ArrayList<>();
-        n = (int) (Math.random() * 100);
-        for (int i = 0; i < n; i++) {
-            mModelIn.list2.add((int) (Math.random() * Integer.MAX_VALUE));
+        for (int x = 0; x < REPEAT; x++) {
+            MultiGenericModel<Model, ModelB, Integer> mModelIn = new MultiGenericModel<>();
+            mModelIn.cmd = (int) (Math.random() * Integer.MAX_VALUE);
+            mModelIn.list = randomModelList(100);
+            mModelIn.model = randomModel();
+            mModelIn.nestList = new ArrayList<>();
+            n = (int) (Math.random() * 100);
+            for (int i = 0; i < n; i++) {
+                GenericModel<ModelB> genericModel = new GenericModel<>();
+                genericModel.val = (int) (Math.random() * Integer.MAX_VALUE);
+                genericModel.model = new ModelB((int) (Math.random() * Integer.MAX_VALUE), (int) (Math.random() * Integer.MAX_VALUE), random.generateSeed((int) (Math.random() * 1024)));
+                mModelIn.nestList.add(genericModel);
+            }
+            mModelIn.list2 = new ArrayList<>();
+            n = (int) (Math.random() * 100);
+            for (int i = 0; i < n; i++) {
+                mModelIn.list2.add((int) (Math.random() * Integer.MAX_VALUE));
+            }
+
+            MultiGenericModel<Model, ModelB, Integer> mModelOut = ASN1Decoder.decode(ASN1Encoder.encode(mModelIn), MultiGenericModel.class, Model.class, ModelB.class, Integer.class);
+            Assert.assertEquals(mModelIn, mModelOut);
         }
 
-        MultiGenericModel<Model, ModelB, Integer> mModelOut = ASN1Decoder.decode(ASN1Encoder.encode(mModelIn), MultiGenericModel.class, Model.class, ModelB.class, Integer.class);
-        Assert.assertEquals(mModelIn, mModelOut);
     }
 
     private NestModel randomNestModel() {
@@ -162,9 +166,13 @@ public class ASN1UnitTest {
 
         List<Model> objectListIn = randomModelList(100);
         List<Model> objectListOut = ASN1Decoder.decode(ASN1Encoder.encode(objectListIn), List.class, Model.class);
-        Assert.assertEquals(objectListIn.size(), objectListOut.size());
-        for (int i = 0; i < objectListIn.size(); i++) {
-            Assert.assertEquals(objectListIn.get(i), objectListOut.get(i));
+        if (objectListIn == null) {
+            Assert.assertNull(objectListOut);
+        } else {
+            Assert.assertEquals(objectListIn.size(), objectListOut.size());
+            for (int i = 0; i < objectListIn.size(); i++) {
+                Assert.assertEquals(objectListIn.get(i), objectListOut.get(i));
+            }
         }
 
 
@@ -176,9 +184,13 @@ public class ASN1UnitTest {
         List<List<Model>> objectNestListOut = ASN1Decoder.decode(ASN1Encoder.encode(objectNestListIn), List.class, List.class, Model.class);
         Assert.assertEquals(objectNestListIn.size(), objectNestListOut.size());
         for (int i = 0; i < objectNestListIn.size(); i++) {
-            Assert.assertEquals(objectNestListIn.get(i).size(), objectNestListOut.get(i).size());
-            for (int ii = 0; ii < objectNestListIn.get(i).size(); ii++) {
-                Assert.assertEquals(objectNestListIn.get(i).get(ii), objectNestListOut.get(i).get(ii));
+            if (objectNestListIn.get(i) == null) {
+                Assert.assertNull(objectNestListOut.get(i));
+            } else {
+                Assert.assertEquals(objectNestListIn.get(i).size(), objectNestListOut.get(i).size());
+                for (int ii = 0; ii < objectNestListIn.get(i).size(); ii++) {
+                    Assert.assertEquals(objectNestListIn.get(i).get(ii), objectNestListOut.get(i).get(ii));
+                }
             }
         }
     }
@@ -227,13 +239,13 @@ public class ASN1UnitTest {
     }
 
     private Model randomModel() {
-        if (Math.random() > 0.8) return null;
-        byte[] data = Math.random() > 0.8 ? null : random.generateSeed((int) (Math.random() * 1024));
+        if (Math.random() > 0.7) return null;
+        byte[] data = Math.random() > 0.5 ? null : random.generateSeed((int) (Math.random() * 1024));
         return new Model((int) (Math.random() * Integer.MAX_VALUE), data);
     }
 
     private ArrayList<Model> randomModelList(int n) {
-        if (Math.random() > 0.8) return null;
+        if (Math.random() > 0.7) return null;
         n = (int) (Math.random() * n);
         ArrayList<Model> list = new ArrayList<>();
         for (int i = 0; i < n; i++) {

@@ -33,7 +33,7 @@ public class ModelB {
         int result = 1;
         result = prime * result + id;
         result = prime * result + cmd;
-        result = prime * result + Arrays.hashCode(data);
+        result = prime * result + (data == null ? 0 : Arrays.hashCode(data));
         return result;
     }
 

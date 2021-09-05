@@ -16,7 +16,7 @@ public class GenericModel<T> {
         final int prime = 31;
         int result = 1;
         result = prime * result + val;
-        result = prime * result + model.hashCode();
+        result = prime * result + (model == null ? 0 : model.hashCode());
         return result;
     }
 

@@ -40,10 +40,11 @@ public class NestModel {
         final int prime = 31;
         int result = 1;
         result = prime * result + cmd;
-        result = prime * result + model.hashCode();
-        result = prime * result + Arrays.hashCode(ints.toArray());
-        result = prime * result + Arrays.hashCode(list.toArray());
-        result = prime * result + Arrays.hashCode(nestList.toArray());
+        result = prime * result + (payload == null ? 0 : Arrays.hashCode(payload));
+        result = prime * result + (model == null ? 0 : model.hashCode());
+        result = prime * result + (ints == null ? 0 : ints.hashCode());
+        result = prime * result + (list == null ? 0 : list.hashCode());
+        result = prime * result + (nestList == null ? 0 : nestList.hashCode());
         return result;
     }
 }

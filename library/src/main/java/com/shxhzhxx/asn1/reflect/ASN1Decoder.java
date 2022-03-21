@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 public class ASN1Decoder {
-    public static <T> T decode(ASN1InputStream in, Class<T> cls, LinkedList<Type> typeParameters) throws Exception {
+    private static <T> T decode(ASN1InputStream in, Class<T> cls, LinkedList<Type> typeParameters) throws Exception {
 
         int tag = in.readTag();
         int len = in.readLength();
@@ -36,44 +37,17 @@ public class ASN1Decoder {
                 }
                 break;
             case Constants.TAG_NULL:
+                consumeTypeParameters(cls, typeParameters);
                 object = null;
                 break;
             case Constants.TAG_SET:
                 if (cls == null || cls == Object.class || cls == Set.class) {
-                    Set<Object> set = new HashSet<>();
-                    Class itemClass = retrieveClass(typeParameters);
-                    LinkedList<Type> typeParametersCopy = new LinkedList<>(typeParameters);
-
-                    byte[] remaining = in.readContent(len);
-                    while (remaining.length > 0) {
-                        ASN1InputStream is = new ASN1InputStream(remaining);
-                        if (set.isEmpty()) {
-                            set.add(decode(is, itemClass, typeParameters));
-                        } else {
-                            set.add(decode(is, itemClass, new LinkedList<>(typeParametersCopy)));
-                        }
-                        remaining = is.remaining();
-                    }
-                    object = set;
+                    object = decodeCollection(in, len, typeParameters, new HashSet<>());
                 }
                 break;
             case Constants.TAG_SEQUENCE:
                 if (cls == null || cls == Object.class || cls == List.class) {
-                    List<Object> list = new ArrayList<>();
-                    Class itemClass = retrieveClass(typeParameters);
-                    LinkedList<Type> typeParametersCopy = new LinkedList<>(typeParameters);
-
-                    byte[] remaining = in.readContent(len);
-                    while (remaining.length > 0) {
-                        ASN1InputStream is = new ASN1InputStream(remaining);
-                        if (list.isEmpty()) {
-                            list.add(decode(is, itemClass, typeParameters));
-                        } else {
-                            list.add(decode(is, itemClass, new LinkedList<>(typeParametersCopy)));
-                        }
-                        remaining = is.remaining();
-                    }
-                    object = list;
+                    object = decodeCollection(in, len, typeParameters, new ArrayList<>());
                 } else {
                     List<Field> fields = new ArrayList<>();
                     for (Field field : cls.getDeclaredFields()) {
@@ -95,16 +69,7 @@ public class ASN1Decoder {
                     for (Field field : fields) {
                         typeParameters.addFirst(field.getGenericType());
                         Class fieldClass = retrieveClass(typeParameters);
-
-                        LinkedList<Type> fieldTypeParameters = new LinkedList<>();
-                        int typeCnt = fieldClass.getTypeParameters().length;
-                        while (typeCnt > 0) {
-                            typeCnt--;
-                            Class fieldTypeItem = retrieveClass(typeParameters);
-                            typeCnt += fieldTypeItem.getTypeParameters().length;
-                            fieldTypeParameters.add(fieldTypeItem);
-                        }
-                        field.set(object, decode(is, fieldClass, fieldTypeParameters));
+                        field.set(object, decode(is, fieldClass, typeParameters));
                     }
                 }
                 break;
@@ -129,6 +94,30 @@ public class ASN1Decoder {
             }
         }
         return Object.class;
+    }
+
+    private static void consumeTypeParameters(Class cls, LinkedList<Type> typeParameters) {
+        //移除多余的typeParameters
+        int typeCnt = cls.getTypeParameters().length;
+        while (typeCnt > 0) {
+            typeCnt--;
+            Class fieldTypeItem = retrieveClass(typeParameters);
+            typeCnt += fieldTypeItem.getTypeParameters().length;
+        }
+    }
+
+    private static Collection<Object> decodeCollection(ASN1InputStream in, int len, LinkedList<Type> typeParameters, Collection<Object> collection) throws Exception {
+        Class itemClass = retrieveClass(typeParameters);
+        LinkedList<Type> typeParametersCopy = new LinkedList<>(typeParameters);
+        consumeTypeParameters(itemClass, typeParameters);
+
+        byte[] remaining = in.readContent(len);
+        while (remaining.length > 0) {
+            ASN1InputStream is = new ASN1InputStream(remaining);
+            collection.add(decode(is, itemClass, new LinkedList<>(typeParametersCopy)));
+            remaining = is.remaining();
+        }
+        return collection;
     }
 
 }

@@ -2,11 +2,13 @@ package com.shxhzhxx.asn1;
 
 import android.util.Base64;
 import android.util.Log;
+import android.util.Pair;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.shxhzhxx.asn1.reflect.ASN1Decoder;
 import com.shxhzhxx.asn1.reflect.ASN1Encoder;
+import com.shxhzhxx.asn1.reflect.TypeToken;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -48,9 +50,13 @@ public class ASN1UnitTest {
 
         for (int i = 0; i < REPEAT; i++) {
             int randomNumber = (int) (Math.random() * Integer.MAX_VALUE);
+            Assert.assertEquals((int) ASN1Decoder.decode(ASN1Encoder.encode(randomNumber), new TypeToken<Integer>() {
+            }), randomNumber);
             Assert.assertEquals((int) ASN1Decoder.decode(ASN1Encoder.encode(randomNumber), int.class), randomNumber);
             Assert.assertEquals((int) ASN1Decoder.decode(ASN1Encoder.encode(randomNumber), Integer.class), randomNumber);
 
+            Assert.assertEquals((int) ASN1Decoder.decode(ASN1Encoder.encode(-randomNumber), new TypeToken<Integer>() {
+            }), -randomNumber);
             Assert.assertEquals((int) ASN1Decoder.decode(ASN1Encoder.encode(-randomNumber), int.class), -randomNumber);
             Assert.assertEquals((int) ASN1Decoder.decode(ASN1Encoder.encode(-randomNumber), Integer.class), -randomNumber);
         }
@@ -64,6 +70,8 @@ public class ASN1UnitTest {
 
         for (int i = 0; i < REPEAT; i++) {
             byte[] randomBytes = random.generateSeed((int) (Math.random() * 1024 * 1024));
+            Assert.assertArrayEquals(randomBytes, ASN1Decoder.decode(ASN1Encoder.encode(randomBytes), new TypeToken<byte[]>() {
+            }));
             Assert.assertArrayEquals(randomBytes, ASN1Decoder.decode(ASN1Encoder.encode(randomBytes), byte[].class));
         }
     }
@@ -74,6 +82,10 @@ public class ASN1UnitTest {
             Model modelIn = randomModel();
             Model modelOut = ASN1Decoder.decode(ASN1Encoder.encode(modelIn), Model.class);
             Assert.assertEquals(modelIn, modelOut);
+
+            Model modelOut1 = ASN1Decoder.decode(ASN1Encoder.encode(modelIn), new TypeToken<Model>() {
+            });
+            Assert.assertEquals(modelIn, modelOut1);
         }
 
         NestModel nestModelIn = randomNestModel();
@@ -83,6 +95,9 @@ public class ASN1UnitTest {
         }
         NestModel nestModelOut = ASN1Decoder.decode(ASN1Encoder.encode(nestModelIn), NestModel.class);
         Assert.assertEquals(nestModelIn, nestModelOut);
+        NestModel nestModelOut1 = ASN1Decoder.decode(ASN1Encoder.encode(nestModelIn), new TypeToken<NestModel>() {
+        });
+        Assert.assertEquals(nestModelIn, nestModelOut1);
 
 
         for (int i = 0; i < REPEAT; i++) {
@@ -94,7 +109,8 @@ public class ASN1UnitTest {
                 ggModelIn.model.val = (int) (Math.random() * Integer.MAX_VALUE);
             }
 
-            GenericModel<GenericModel<Model>> ggModelOut = ASN1Decoder.decode(ASN1Encoder.encode(ggModelIn), GenericModel.class, GenericModel.class, Model.class);
+            GenericModel<GenericModel<Model>> ggModelOut = ASN1Decoder.decode(ASN1Encoder.encode(ggModelIn), new TypeToken<GenericModel<GenericModel<Model>>>() {
+            });
             Assert.assertEquals(ggModelIn, ggModelOut);
         }
 
@@ -109,7 +125,7 @@ public class ASN1UnitTest {
             for (int i = 0; i < n; i++) {
                 GenericModel<ModelB> genericModel = new GenericModel<>();
                 genericModel.val = (int) (Math.random() * Integer.MAX_VALUE);
-                genericModel.model = new ModelB((int) (Math.random() * Integer.MAX_VALUE), (int) (Math.random() * Integer.MAX_VALUE), random.generateSeed((int) (Math.random() * 1024)));
+                genericModel.model = randomModelB();
                 mModelIn.nestList.add(genericModel);
             }
             mModelIn.list2 = new ArrayList<>();
@@ -117,8 +133,14 @@ public class ASN1UnitTest {
             for (int i = 0; i < n; i++) {
                 mModelIn.list2.add((int) (Math.random() * Integer.MAX_VALUE));
             }
+            mModelIn.list3 = new ArrayList<>();
+            n = (int) (Math.random() * 100);
+            for (int i = 0; i < n; i++) {
+                mModelIn.list3.add(new PairModel<>(randomModelB(), (int) (Math.random() * 1024)));
+            }
 
-            MultiGenericModel<Model, ModelB, Integer> mModelOut = ASN1Decoder.decode(ASN1Encoder.encode(mModelIn), MultiGenericModel.class, Model.class, ModelB.class, Integer.class);
+            MultiGenericModel<Model, ModelB, Integer> mModelOut = ASN1Decoder.decode(ASN1Encoder.encode(mModelIn), new TypeToken<MultiGenericModel<Model, ModelB, Integer>>() {
+            });
             Assert.assertEquals(mModelIn, mModelOut);
         }
 
@@ -146,7 +168,8 @@ public class ASN1UnitTest {
         for (int i = 0; i < n; i++) {
             intListIn.add((int) (Math.random() * Integer.MAX_VALUE));
         }
-        List<Integer> intListOut = ASN1Decoder.decode(ASN1Encoder.encode(intListIn), List.class);
+        List<Integer> intListOut = ASN1Decoder.decode(ASN1Encoder.encode(intListIn), new TypeToken<List<Integer>>() {
+        });
         Assert.assertEquals(intListIn.size(), intListOut.size());
         for (int i = 0; i < intListIn.size(); i++) {
             Assert.assertEquals(intListIn.get(i), intListOut.get(i));
@@ -157,7 +180,8 @@ public class ASN1UnitTest {
         for (int i = 0; i < n; i++) {
             bytesListIn.add(random.generateSeed((int) (Math.random() * 1024)));
         }
-        List<byte[]> bytesListOut = ASN1Decoder.decode(ASN1Encoder.encode(bytesListIn), List.class);
+        List<byte[]> bytesListOut = ASN1Decoder.decode(ASN1Encoder.encode(bytesListIn), new TypeToken<List<byte[]>>() {
+        });
         Assert.assertEquals(bytesListIn.size(), bytesListOut.size());
         for (int i = 0; i < bytesListIn.size(); i++) {
             Assert.assertArrayEquals(bytesListIn.get(i), bytesListOut.get(i));
@@ -165,7 +189,8 @@ public class ASN1UnitTest {
 
 
         List<Model> objectListIn = randomModelList(100);
-        List<Model> objectListOut = ASN1Decoder.decode(ASN1Encoder.encode(objectListIn), List.class, Model.class);
+        List<Model> objectListOut = ASN1Decoder.decode(ASN1Encoder.encode(objectListIn), new TypeToken<List<Model>>() {
+        });
         if (objectListIn == null) {
             Assert.assertNull(objectListOut);
         } else {
@@ -181,7 +206,8 @@ public class ASN1UnitTest {
         for (int i = 0; i < n; i++) {
             objectNestListIn.add(randomModelList(n));
         }
-        List<List<Model>> objectNestListOut = ASN1Decoder.decode(ASN1Encoder.encode(objectNestListIn), List.class, List.class, Model.class);
+        List<List<Model>> objectNestListOut = ASN1Decoder.decode(ASN1Encoder.encode(objectNestListIn), new TypeToken<List<List<Model>>>() {
+        });
         Assert.assertEquals(objectNestListIn.size(), objectNestListOut.size());
         for (int i = 0; i < objectNestListIn.size(); i++) {
             if (objectNestListIn.get(i) == null) {
@@ -202,7 +228,8 @@ public class ASN1UnitTest {
         for (int i = 0; i < n; i++) {
             intSetIn.add((int) (Math.random() * Integer.MAX_VALUE));
         }
-        Set<Integer> intSetOut = ASN1Decoder.decode(ASN1Encoder.encode(intSetIn), Set.class);
+        Set<Integer> intSetOut = ASN1Decoder.decode(ASN1Encoder.encode(intSetIn), new TypeToken<Set<Integer>>() {
+        });
         Assert.assertEquals(intSetIn.size(), intSetOut.size());
         for (Integer item : intSetIn) {
             Assert.assertTrue(intSetOut.contains(item));
@@ -214,7 +241,8 @@ public class ASN1UnitTest {
         for (int i = 0; i < n; i++) {
             objectSetIn.add(randomModel());
         }
-        Set<Model> objectSetOut = ASN1Decoder.decode(ASN1Encoder.encode(objectSetIn), Set.class, Model.class);
+        Set<Model> objectSetOut = ASN1Decoder.decode(ASN1Encoder.encode(objectSetIn), new TypeToken<Set<Model>>() {
+        });
         Assert.assertEquals(objectSetIn.size(), objectSetOut.size());
         for (Model item : objectSetIn) {
             Assert.assertTrue(objectSetOut.contains(item));
@@ -231,11 +259,17 @@ public class ASN1UnitTest {
             }
             objectNestSetIn.add(set);
         }
-        Set<Set<Model>> objectNestSetOut = ASN1Decoder.decode(ASN1Encoder.encode(objectNestSetIn), Set.class, Set.class, Model.class);
+        Set<Set<Model>> objectNestSetOut = ASN1Decoder.decode(ASN1Encoder.encode(objectNestSetIn), new TypeToken<Set<Set<Model>>>() {
+        });
         Assert.assertEquals(objectNestSetIn.size(), objectNestSetOut.size());
         for (Set<Model> item : objectNestSetIn) {
             Assert.assertTrue(objectNestSetOut.contains(item));
         }
+    }
+
+    private ModelB randomModelB(){
+        if (Math.random() > 0.7) return null;
+        return new ModelB((int) (Math.random() * Integer.MAX_VALUE), (int) (Math.random() * Integer.MAX_VALUE), random.generateSeed((int) (Math.random() * 1024)));
     }
 
     private Model randomModel() {

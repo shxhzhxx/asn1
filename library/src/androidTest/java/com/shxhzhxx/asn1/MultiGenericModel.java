@@ -22,6 +22,9 @@ public class MultiGenericModel<T1, T2, T3> {
     @ASN1Field(order = 5)
     public List<T3> list2;
 
+    @ASN1Field(order = 6)
+    public List<PairModel<T2,T3>> list3;
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -31,6 +34,7 @@ public class MultiGenericModel<T1, T2, T3> {
         result = prime * result + (model == null ? 0 : model.hashCode());
         result = prime * result + (nestList == null ? 0 : nestList.hashCode());
         result = prime * result + (list2 == null ? 0 : list2.hashCode());
+        result = prime * result + (list3 == null ? 0 : list3.hashCode());
         return result;
     }
 

@@ -2,7 +2,6 @@ package com.shxhzhxx.asn1;
 
 import android.util.Base64;
 import android.util.Log;
-import android.util.Pair;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -267,7 +266,7 @@ public class ASN1UnitTest {
         }
     }
 
-    private ModelB randomModelB(){
+    private ModelB randomModelB() {
         if (Math.random() > 0.7) return null;
         return new ModelB((int) (Math.random() * Integer.MAX_VALUE), (int) (Math.random() * Integer.MAX_VALUE), random.generateSeed((int) (Math.random() * 1024)));
     }
